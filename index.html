@@ -7,7 +7,7 @@
     body { font-family: sans-serif; text-align: center; padding: 2rem; }
     video { border: 1px solid #ccc; width: 100%; max-width: 480px; }
     button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1.1rem; }
-    #status { margin-top: 1rem; font-size: 1.2rem; }
+    #status, #debug { margin-top: 1rem; font-size: 1.1rem; white-space: pre-wrap; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
   </style>
 </head>
 <body>
@@ -17,10 +17,12 @@
   <br />
   <button onclick="capturar()">Capturar y verificar</button>
   <div id="status">📷 Esperando captura</div>
+  <div id="debug"></div>
 
   <script>
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
+    const debugEl = document.getElementById("debug");
 
     // Iniciar cámara
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -30,13 +32,12 @@
 
     async function capturar() {
       statusEl.innerText = "🕐 Procesando imagen...";
+      debugEl.innerText = "";
 
-      // Capturar frame del video
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
-
       const imagen = canvas.toDataURL("image/jpeg");
 
       try {
@@ -47,22 +48,18 @@
         });
 
         const datos = await res.json();
-        console.log("🧪 Respuesta del backend:", datos);
+        debugEl.innerText = `🔎 Respuesta completa:\n${JSON.stringify(datos, null, 2)}`;
 
-        if (!res.ok || datos.error) {
-          statusEl.innerText = `❌ Error: ${datos.error || "en la verificación"}`;
-          return;
-        }
-
-        if (datos.nombre) {
+        if (res.ok && datos.nombre) {
           statusEl.innerText = `✅ ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
         } else {
           statusEl.innerText = "❌ Rostro no reconocido";
         }
 
-      } catch (error) {
-        console.error("❌ Error al conectar:", error);
-        statusEl.innerText = "❌ No se pudo conectar con el servidor";
+      } catch (err) {
+        console.error("❌ Error:", err);
+        statusEl.innerText = "❌ Error al contactar el backend";
+        debugEl.innerText = `❌ Error de red o CORS:\n${err}`;
       }
     }
   </script>
