@@ -39,24 +39,30 @@
 
       const imagen = canvas.toDataURL("image/jpeg");
 
-      // Enviar al backend para reconocimiento
-      const res = await fetch("https://3506-181-116-127-196.ngrok-free.app/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagen })
-      });
+      try {
+        const res = await fetch("https://3506-181-116-127-196.ngrok-free.app/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imagen })
+        });
 
-      if (!res.ok) {
-        statusEl.innerText = "❌ Error en la verificación";
-        return;
-      }
+        const datos = await res.json();
+        console.log("🧪 Respuesta del backend:", datos);
 
-      const datos = await res.json();
+        if (!res.ok || datos.error) {
+          statusEl.innerText = `❌ Error: ${datos.error || "en la verificación"}`;
+          return;
+        }
 
-      if (datos.nombre) {
-        statusEl.innerText = `✅ ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
-      } else {
-        statusEl.innerText = "❌ Rostro no reconocido";
+        if (datos.nombre) {
+          statusEl.innerText = `✅ ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
+        } else {
+          statusEl.innerText = "❌ Rostro no reconocido";
+        }
+
+      } catch (error) {
+        console.error("❌ Error al conectar:", error);
+        statusEl.innerText = "❌ No se pudo conectar con el servidor";
       }
     }
   </script>
