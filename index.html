@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control de Asistencia</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    video { border: 1px solid #ccc; width: 100%; max-width: 480px; }
+    button { margin-top: 1rem; padding: 1rem; font-size: 1rem; }
+    #resultado { margin-top: 2rem; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Control de Asistencia</h1>
+  <video id="video" autoplay playsinline></video><br>
+  <button onclick="capturar()">Capturar y verificar</button>
+  <div id="resultado">Esperando...</div>
+
+  <script>
+    const video = document.getElementById("video");
+    const resultadoEl = document.getElementById("resultado");
+
+    // Iniciar cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => resultadoEl.innerText = "Error al acceder a la cámara");
+
+    async function capturar() {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const base64 = canvas.toDataURL("image/jpeg");
+
+      resultadoEl.innerText = "Verificando...";
+
+      try {
+        const res = await fetch("http://192.168.253.5:5000/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imagen: base64 })
+        });
+
+        const json = await res.json();
+        if (json.coincide) {
+          resultadoEl.innerText = `✅ Reconocido: ${json.nombre}`;
+        } else {
+          resultadoEl.innerText = "❌ No se reconoce el rostro";
+        }
+      } catch (err) {
+        resultadoEl.innerText = "Error al verificar";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
