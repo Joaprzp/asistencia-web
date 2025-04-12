@@ -42,6 +42,7 @@
       margin-top: 1.5rem;
       font-size: 1.4rem;
       font-weight: bold;
+      white-space: pre-line;
     }
   </style>
 </head>
@@ -56,8 +57,6 @@
   <script>
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
-
-    const MENSAJE_EXITO = "✅ Registro exitoso. ¡Buen trabajo!"; // Podés cambiar esto fácilmente
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
@@ -74,7 +73,7 @@
 
       const imagen = canvas.toDataURL("image/jpeg");
 
-      const res = await fetch("https://TU_BACKEND_NGROK/verify", {
+      const res = await fetch("https://17db-181-116-127-196.ngrok-free.app/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imagen })
@@ -88,7 +87,8 @@
       const datos = await res.json();
 
       if (datos.nombre) {
-        statusEl.innerText = `${MENSAJE_EXITO}\n👤 ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
+        const saludo = `Hola ${datos.nombre.charAt(0).toUpperCase() + datos.nombre.slice(1)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
+        statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
       } else {
         statusEl.innerText = "❌ Rostro no reconocido";
       }
