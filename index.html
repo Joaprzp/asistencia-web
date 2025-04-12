@@ -2,14 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Control de Asistencia</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
       background-color: #f9f9f9;
+      margin: 0;
     }
 
     h1 {
@@ -17,20 +22,23 @@
     }
 
     .contenedor {
+      width: 100%;
       max-width: 720px;
       margin: 0 auto;
-      padding: 0 1rem;
     }
 
     .video-wrapper {
       position: relative;
       width: 100%;
+      aspect-ratio: 4/3;
     }
 
     video {
-      border: 3px solid #2b0027;
       width: 100%;
+      height: 100%;
+      border: 3px solid #2b0027;
       border-radius: 8px;
+      object-fit: cover;
     }
 
     #overlay {
@@ -69,6 +77,7 @@
 
     #status-container {
       margin-top: 2rem;
+      width: 100%;
     }
 
     #status {
@@ -77,15 +86,16 @@
       border: 2px solid #2b0027;
       border-radius: 12px;
       padding: 1.5rem;
-      text-align: left;
       white-space: pre-line;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       width: 100%;
+      font-size: 1.2rem;
       min-height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
+      text-align: left;
     }
 
     .loader {
@@ -101,20 +111,23 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 480px) {
       h1 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
       }
 
       button {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
 
       #status {
         font-size: 1rem;
+        padding: 1rem;
       }
     }
   </style>
@@ -163,7 +176,6 @@
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
-
       const imagen = canvas.toDataURL("image/jpeg");
 
       const res = await fetch("https://17db-181-116-127-196.ngrok-free.app/verify", {
@@ -183,7 +195,7 @@
       if (datos.nombre) {
         const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
         statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-        resetEstado(4000);
+        resetEstado(10000);
       } else {
         statusEl.innerText = "❌ Rostro no reconocido";
         resetEstado(3000);
