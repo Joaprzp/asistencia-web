@@ -4,10 +4,45 @@
   <meta charset="UTF-8" />
   <title>Control de Asistencia</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 2rem; }
-    video { border: 1px solid #ccc; width: 100%; max-width: 480px; }
-    button { margin-top: 1rem; padding: 0.5rem 1rem; font-size: 1.1rem; }
-    #status, #debug { margin-top: 1rem; font-size: 1.1rem; white-space: pre-wrap; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+    }
+
+    video {
+      border: 3px solid #555;
+      width: 100%;
+      max-width: 720px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      font-size: 1.3rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #status {
+      margin-top: 1.5rem;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -15,16 +50,15 @@
 
   <video id="video" autoplay muted playsinline></video>
   <br />
-  <button onclick="capturar()">Capturar y verificar</button>
+  <button onclick="capturar()">Registrar asistencia</button>
   <div id="status">📷 Esperando captura</div>
-  <div id="debug"></div>
 
   <script>
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
-    const debugEl = document.getElementById("debug");
 
-    // Iniciar cámara
+    const MENSAJE_EXITO = "✅ Registro exitoso. ¡Buen trabajo!"; // Podés cambiar esto fácilmente
+
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
@@ -32,34 +66,31 @@
 
     async function capturar() {
       statusEl.innerText = "🕐 Procesando imagen...";
-      debugEl.innerText = "";
 
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
+
       const imagen = canvas.toDataURL("image/jpeg");
 
-      try {
-        const res = await fetch("https://17db-181-116-127-196.ngrok-free.app/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imagen })
-        });
+      const res = await fetch("https://TU_BACKEND_NGROK/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imagen })
+      });
 
-        const datos = await res.json();
-        debugEl.innerText = `🔎 Respuesta completa:\n${JSON.stringify(datos, null, 2)}`;
+      if (!res.ok) {
+        statusEl.innerText = "❌ Error en la verificación";
+        return;
+      }
 
-        if (res.ok && datos.nombre) {
-          statusEl.innerText = `✅ ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
-        } else {
-          statusEl.innerText = "❌ Rostro no reconocido";
-        }
+      const datos = await res.json();
 
-      } catch (err) {
-        console.error("❌ Error:", err);
-        statusEl.innerText = "❌ Error al contactar el backend";
-        debugEl.innerText = `❌ Error de red o CORS:\n${err}`;
+      if (datos.nombre) {
+        statusEl.innerText = `${MENSAJE_EXITO}\n👤 ${datos.nombre} - ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})`;
+      } else {
+        statusEl.innerText = "❌ Rostro no reconocido";
       }
     }
   </script>
