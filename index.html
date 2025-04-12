@@ -15,58 +15,42 @@
       margin-bottom: 2rem;
     }
 
-    .contenedor-camara {
+    .preview-container {
       position: relative;
+      display: inline-block;
       width: 100%;
       max-width: 720px;
-      margin: 0 auto;
     }
 
-    video, .overlay {
+    #video {
       width: 100%;
-      border: 3px solid #2b0027;
-      border-radius: 8px;
       height: auto;
-    }
-
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      background-color: #2b0027;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
       border-radius: 8px;
-    }
-
-    .overlay.apagado {
-      opacity: 1;
+      border: 3px solid #2b0027;
+      background-color: #000;
     }
 
     button {
       margin-top: 1.5rem;
-      padding: 1rem 2rem;
-      font-size: 1.3rem;
+      width: 100%;
+      max-width: 720px;
+      padding: 1.5rem;
+      font-size: 1.5rem;
       background-color: #1f1f1f;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      width: 100%;
-      height: 100%;
-      max-width: 1080px;
-      max-height: 300px;
-    }
-
-    button:hover:enabled {
-      background-color: #2b0027;
+      transition: background-color 0.2s ease;
     }
 
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #2b0027;
     }
 
     #status-container {
@@ -86,19 +70,18 @@
       text-align: left;
       white-space: pre-line;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
   <h1>Control de Asistencia</h1>
 
-  <div class="contenedor-camara">
+  <div class="preview-container">
     <video id="video" autoplay muted playsinline></video>
-    <div class="overlay" id="overlay"></div>
   </div>
 
-  <button id="boton" onclick="capturar()">Registrar asistencia</button>
+  <br />
+  <button id="btnCapturar" onclick="capturar()">Registrar asistencia</button>
 
   <div id="status-container">
     <div id="status">📷 Esperando captura</div>
@@ -106,29 +89,26 @@
 
   <script>
     const video = document.getElementById("video");
-    const boton = document.getElementById("boton");
     const statusEl = document.getElementById("status");
-    const overlay = document.getElementById("overlay");
+    const btn = document.getElementById("btnCapturar");
+    const VIDEO_PLACEHOLDER_COLOR = "#000";
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
       });
 
-    function capitalizar(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
     async function capturar() {
-      boton.disabled = true;
-      boton.innerText = "Procesando...";
-      overlay.classList.add("apagado");
       statusEl.innerText = "Gracias :)";
+      btn.disabled = true;
+      btn.innerText = "Procesando...";
+      video.style.opacity = 0;
 
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
+
       const imagen = canvas.toDataURL("image/jpeg");
 
       try {
@@ -138,37 +118,27 @@
           body: JSON.stringify({ imagen })
         });
 
-        boton.innerText = "Registrar asistencia";
-
-        if (!res.ok) {
-          statusEl.innerText = "❌ Error en la verificación";
-          resetEstado(3000);
-          return;
-        }
-
         const datos = await res.json();
 
-        if (datos.nombre) {
-          const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
+        if (!res.ok || datos.error) {
+          statusEl.innerText = "❌ Error en la verificación";
+        } else if (datos.nombre) {
+          const saludo = `Hola ${datos.nombre.charAt(0).toUpperCase() + datos.nombre.slice(1)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
           statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-          resetEstado(3000);
         } else {
           statusEl.innerText = "❌ Rostro no reconocido";
-          resetEstado(2000);
         }
-      } catch (err) {
-        statusEl.innerText = "❌ Error en la verificación";
-        boton.innerText = "Registrar asistencia";
-        resetEstado(2000);
-      }
-    }
 
-    function resetEstado(tiempo) {
+      } catch (e) {
+        statusEl.innerText = "❌ Error de conexión";
+      }
+
       setTimeout(() => {
         statusEl.innerText = "📷 Esperando captura";
-        overlay.classList.remove("apagado");
-        boton.disabled = false;
-      }, tiempo);
+        btn.disabled = false;
+        btn.innerText = "Registrar asistencia";
+        video.style.opacity = 1;
+      }, datos?.nombre ? 3000 : 2000);
     }
   </script>
 </body>
