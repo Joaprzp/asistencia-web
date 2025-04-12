@@ -68,11 +68,13 @@
       border-radius: 6px;
       cursor: pointer;
       width: 100%;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, opacity 0.3s ease;
     }
 
-    button:hover {
-      background-color: #2b0027;
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+      opacity: 0.7;
     }
 
     #status-container {
@@ -96,24 +98,6 @@
       justify-content: center;
       position: relative;
       text-align: left;
-    }
-
-    .loader {
-      border: 4px solid #fff;
-      border-top: 4px solid #2b0027;
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      animation: spin 1s linear infinite;
-      position: absolute;
-      right: 1rem;
-      top: 1rem;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
     }
 
     @media (max-width: 480px) {
@@ -141,7 +125,7 @@
       <div id="overlay"></div>
     </div>
 
-    <button onclick="capturar()">Registrar asistencia</button>
+    <button id="boton" onclick="capturar()">Registrar asistencia</button>
 
     <div id="status-container">
       <div id="status">📷 Esperando captura</div>
@@ -152,6 +136,7 @@
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
     const overlay = document.getElementById("overlay");
+    const boton = document.getElementById("boton");
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
@@ -159,18 +144,19 @@
       });
 
     function resetEstado(delay = 10000) {
-      overlay.classList.add("apagado");
       setTimeout(() => {
         statusEl.innerText = "📷 Esperando captura";
-        const loader = document.querySelector(".loader");
-        if (loader) loader.remove();
         overlay.classList.remove("apagado");
+        boton.disabled = false;
+        boton.innerText = "Registrar asistencia";
       }, delay);
     }
 
     async function capturar() {
+      boton.disabled = true;
+      boton.innerText = "Procesando...";
+      overlay.classList.add("apagado");
       statusEl.innerText = "Gracias :)";
-      agregarLoader();
 
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
@@ -204,15 +190,6 @@
 
     function capitalizar(str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    function agregarLoader() {
-      const loaderExistente = document.querySelector(".loader");
-      if (!loaderExistente) {
-        const loader = document.createElement("div");
-        loader.classList.add("loader");
-        statusEl.appendChild(loader);
-      }
     }
   </script>
 </body>
