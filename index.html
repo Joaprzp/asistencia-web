@@ -27,41 +27,42 @@
       margin-top: 1.5rem;
       padding: 1rem 2rem;
       font-size: 1.3rem;
-      background-color: #000000;
+      background-color: #1f1f1f;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
 
-    button:hover {
+    button:hover:enabled {
       background-color: #2b0027;
     }
 
-    #status {
-      margin-top: 1.5rem;
-      font-size: 1.4rem;
-      font-weight: bold;
-      white-space: pre-line;
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     #status-container {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
-}
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+    }
 
-  #status {
-    color: #fff;
-    background-color: #1f1f1f;
-    border: 2px solid #2b0027;
-    border-radius: 12px;
-    padding: 1.5rem;
-    max-width: 480px;
-    text-align: left;
-    white-space: pre-line;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
+    #status {
+      color: #fff;
+      background-color: #1f1f1f;
+      border: 2px solid #2b0027;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 480px;
+      text-align: left;
+      white-space: pre-line;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -69,7 +70,7 @@
 
   <video id="video" autoplay muted playsinline></video>
   <br />
-  <button onclick="capturar()">Registrar asistencia</button>
+  <button id="botonCaptura" onclick="capturar()">Registrar asistencia</button>
   <div id="status-container">
     <div id="status">📷 Esperando captura</div>
   </div>
@@ -77,13 +78,21 @@
   <script>
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
+    const boton = document.getElementById("botonCaptura");
+    const mensajePorDefecto = "📷 Esperando captura";
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
       });
 
+    function resetearStatus() {
+      statusEl.innerText = mensajePorDefecto;
+      boton.disabled = false;
+    }
+
     async function capturar() {
+      boton.disabled = true;
       statusEl.innerText = "🕐 Procesando imagen...";
 
       const canvas = document.createElement("canvas");
@@ -101,6 +110,7 @@
 
       if (!res.ok) {
         statusEl.innerText = "❌ Error en la verificación";
+        setTimeout(resetearStatus, 10000);
         return;
       }
 
@@ -112,6 +122,8 @@
       } else {
         statusEl.innerText = "❌ Rostro no reconocido";
       }
+
+      setTimeout(resetearStatus, 10000);
     }
   </script>
 </body>
