@@ -164,26 +164,34 @@
       canvas.getContext("2d").drawImage(video, 0, 0);
       const imagen = canvas.toDataURL("image/jpeg");
 
-      const res = await fetch("https://17db-181-116-127-196.ngrok-free.app/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagen })
-      });
+      try {
+        const res = await fetch("https://17db-181-116-127-196.ngrok-free.app/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imagen })
+        });
 
-      if (!res.ok) {
+        boton.innerText = "Registrar asistencia"; // 🔄 Reset inmediato del texto
+
+        if (!res.ok) {
+          statusEl.innerText = "❌ Error en la verificación";
+          resetEstado(3000);
+          return;
+        }
+
+        const datos = await res.json();
+
+        if (datos.nombre) {
+          const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
+          statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
+          resetEstado(10000);
+        } else {
+          statusEl.innerText = "❌ Rostro no reconocido";
+          resetEstado(3000);
+        }
+      } catch (err) {
         statusEl.innerText = "❌ Error en la verificación";
-        resetEstado(3000);
-        return;
-      }
-
-      const datos = await res.json();
-
-      if (datos.nombre) {
-        const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
-        statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-        resetEstado(10000);
-      } else {
-        statusEl.innerText = "❌ Rostro no reconocido";
+        boton.innerText = "Registrar asistencia";
         resetEstado(3000);
       }
     }
