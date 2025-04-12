@@ -55,7 +55,9 @@
       border-radius: 6px;
       cursor: pointer;
       width: 100%;
-      max-width: 720px;
+      height: 100%;
+      max-width: 1080px;
+      max-height: 300px;
     }
 
     button:hover:enabled {
@@ -149,15 +151,15 @@
         if (datos.nombre) {
           const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
           statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-          resetEstado(4000);
+          resetEstado(3000);
         } else {
           statusEl.innerText = "❌ Rostro no reconocido";
-          resetEstado(3000);
+          resetEstado(2000);
         }
       } catch (err) {
         statusEl.innerText = "❌ Error en la verificación";
         boton.innerText = "Registrar asistencia";
-        resetEstado(3000);
+        resetEstado(2000);
       }
     }
 
