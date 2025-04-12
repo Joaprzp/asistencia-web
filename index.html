@@ -2,60 +2,47 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Control de Asistencia</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
       background-color: #f9f9f9;
-      margin: 0;
     }
 
     h1 {
       margin-bottom: 2rem;
     }
 
-    .contenedor {
+    .contenedor-camara {
+      position: relative;
       width: 100%;
       max-width: 720px;
       margin: 0 auto;
     }
 
-    .video-wrapper {
-      position: relative;
+    video, .overlay {
       width: 100%;
-      aspect-ratio: 4/3;
-    }
-
-    video {
-      width: 100%;
-      height: 100%;
       border: 3px solid #2b0027;
       border-radius: 8px;
-      object-fit: cover;
+      height: auto;
     }
 
-    #overlay {
+    .overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
       height: 100%;
-      border-radius: 8px;
-      background-color: #1f1f1f;
+      background-color: #2b0027;
       opacity: 0;
-      transition: opacity 0.3s ease;
       pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 8px;
     }
 
-    .apagado {
-      opacity: 1 !important;
+    .overlay.apagado {
+      opacity: 1;
     }
 
     button {
@@ -68,18 +55,22 @@
       border-radius: 6px;
       cursor: pointer;
       width: 100%;
-      transition: background-color 0.3s ease, opacity 0.3s ease;
+      max-width: 720px;
+    }
+
+    button:hover:enabled {
+      background-color: #2b0027;
     }
 
     button:disabled {
-      background-color: #999;
+      opacity: 0.6;
       cursor: not-allowed;
-      opacity: 0.7;
     }
 
     #status-container {
       margin-top: 2rem;
-      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     #status {
@@ -88,68 +79,42 @@
       border: 2px solid #2b0027;
       border-radius: 12px;
       padding: 1.5rem;
+      max-width: 720px;
+      width: 100%;
+      text-align: left;
       white-space: pre-line;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      width: 100%;
       font-size: 1.2rem;
-      min-height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      text-align: left;
-    }
-
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 1.4rem;
-      }
-
-      button {
-        font-size: 1rem;
-      }
-
-      #status {
-        font-size: 1rem;
-        padding: 1rem;
-      }
     }
   </style>
 </head>
 <body>
   <h1>Control de Asistencia</h1>
 
-  <div class="contenedor">
-    <div class="video-wrapper">
-      <video id="video" autoplay muted playsinline></video>
-      <div id="overlay"></div>
-    </div>
+  <div class="contenedor-camara">
+    <video id="video" autoplay muted playsinline></video>
+    <div class="overlay" id="overlay"></div>
+  </div>
 
-    <button id="boton" onclick="capturar()">Registrar asistencia</button>
+  <button id="boton" onclick="capturar()">Registrar asistencia</button>
 
-    <div id="status-container">
-      <div id="status">📷 Esperando captura</div>
-    </div>
+  <div id="status-container">
+    <div id="status">📷 Esperando captura</div>
   </div>
 
   <script>
     const video = document.getElementById("video");
+    const boton = document.getElementById("boton");
     const statusEl = document.getElementById("status");
     const overlay = document.getElementById("overlay");
-    const boton = document.getElementById("boton");
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         video.srcObject = stream;
       });
 
-    function resetEstado(delay = 10000) {
-      setTimeout(() => {
-        statusEl.innerText = "📷 Esperando captura";
-        overlay.classList.remove("apagado");
-        boton.disabled = false;
-        boton.innerText = "Registrar asistencia";
-      }, delay);
+    function capitalizar(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     async function capturar() {
@@ -171,7 +136,7 @@
           body: JSON.stringify({ imagen })
         });
 
-        boton.innerText = "Registrar asistencia"; // 🔄 Reset inmediato del texto
+        boton.innerText = "Registrar asistencia";
 
         if (!res.ok) {
           statusEl.innerText = "❌ Error en la verificación";
@@ -184,7 +149,7 @@
         if (datos.nombre) {
           const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
           statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-          resetEstado(10000);
+          resetEstado(4000);
         } else {
           statusEl.innerText = "❌ Rostro no reconocido";
           resetEstado(3000);
@@ -196,8 +161,12 @@
       }
     }
 
-    function capitalizar(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1);
+    function resetEstado(tiempo) {
+      setTimeout(() => {
+        statusEl.innerText = "📷 Esperando captura";
+        overlay.classList.remove("apagado");
+        boton.disabled = false;
+      }, tiempo);
     }
   </script>
 </body>
