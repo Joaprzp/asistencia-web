@@ -71,15 +71,23 @@
   <video id="video" autoplay muted playsinline></video>
   <br />
   <button id="botonCaptura" onclick="capturar()">Registrar asistencia</button>
+
   <div id="status-container">
     <div id="status">📷 Esperando captura</div>
   </div>
-  
+
+  <!-- Sonidos -->
+  <audio id="sonidoExito" src="success.wav" preload="auto"></audio>
+  <audio id="sonidoError" src="error.mp3" preload="auto"></audio>
+
   <script>
     const video = document.getElementById("video");
     const statusEl = document.getElementById("status");
     const boton = document.getElementById("botonCaptura");
     const mensajePorDefecto = "📷 Esperando captura";
+
+    const sonidoExito = document.getElementById("sonidoExito");
+    const sonidoError = document.getElementById("sonidoError");
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
@@ -110,6 +118,7 @@
 
       if (!res.ok) {
         statusEl.innerText = "❌ Error en la verificación";
+        sonidoError.play();
         setTimeout(resetearStatus, 10000);
         return;
       }
@@ -119,8 +128,10 @@
       if (datos.nombre) {
         const saludo = `Hola ${datos.nombre.charAt(0).toUpperCase() + datos.nombre.slice(1)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
         statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
+        sonidoExito.play();
       } else {
         statusEl.innerText = "❌ Rostro no reconocido";
+        sonidoError.play();
       }
 
       setTimeout(resetearStatus, 10000);
