@@ -138,14 +138,14 @@
 
         const datos = await res.json();
 
-        let tiempoReset = 3000;
+        let tiempoReset = 2500;
 
         if (!res.ok || datos.error) {
           statusEl.innerText = "❌ Error en la verificación";
         } else if (datos.nombre) {
           const saludo = `Hola ${capitalizar(datos.nombre)}!\nQue tengas una excelente ${datos.estado_turno.includes("mañana") ? "mañana" : "tarde"} 👋`;
           statusEl.innerText = `${saludo}\n📌 Evento: ${datos.tipo_evento.toUpperCase()} (${datos.estado_turno})\n🧑‍🍳 Puesto: ${datos.puesto}`;
-          tiempoReset = 3000;
+          tiempoReset = 2500;
         } else {
           statusEl.innerText = "❌ Rostro no reconocido";
         }
